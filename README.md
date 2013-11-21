@@ -17,3 +17,7 @@ export DOCKER_PROVISION_URL=<url to django, e.g. http://10.0.0.1:8000/>
 export DOCKER_IMAGE_SERVER=<url to docker image server, e.g. http://10.0.0.2:8000/>
 python manage.py build_docker_images
 ```
+
+**You have to run docker on a TCP socket, remember it must be on a private network or everyone can play around with it!**
+E.g. 
+```docker -d -H tcp://0.0.0.0:12345```
