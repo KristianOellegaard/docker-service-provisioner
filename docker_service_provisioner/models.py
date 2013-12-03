@@ -1,7 +1,12 @@
 from django.db import models
 from django.db.models.signals import post_save
 from docker_service_provisioner.service_pool import pool
+from docker_service_provisioner.tasks import deploy_instance
 from uuidfield import UUIDField
+
+
+def get_available_host(service_backend):
+    return Host.objects.filter()[0]
 
 
 class Host(models.Model):
@@ -43,25 +48,44 @@ class ServicePlan(models.Model):
     def __unicode__(self):
         return u"%s: %s" % (self.service, self.name)
 
+
 class ServiceInstance(models.Model):
     uuid = UUIDField(auto=True)
+    host = models.ForeignKey(Host)
     service_plan = models.ForeignKey(ServicePlan)
+    uri = models.CharField(max_length=256, editable=False)
+    container_id = models.CharField(max_length=128, editable=False)
 
-    def docker_run_command(self):
-        return u"docker run -d -p 6379 %(env_vars)s docker-service-provisioner/%(service_name)s:v%(revision)s -m %(memory)s -c %(cpu)s" % {
-            'service_name': pool.get_dict(self.service_plan.service_backend)['service'],
-            'env_vars': " ".join([
-                "-e %s=%s" % (
-                    instance_config.name, instance_config.value
-                ) for instance_config in self.serviceinstanceconfiguration_set.all()
-            ]),
-            'revision': pool.get_dict(self.service_plan.service_backend)['version'],
-            'memory': self.service_plan.ram * 1024 * 1024,
-            'cpu': self.service_plan.cpu_weight,
+    def deploy(self):
+        env_vars = {
+            instance_config.name: instance_config.value
+            for instance_config in self.serviceinstanceconfiguration_set.all()
         }
+        service_backend_dict = pool.get_dict(self.service_plan.service_backend)
+        container_id, ports = deploy_instance(
+            self.host.docker_api_endpoint,
+            service_backend_dict['service'],
+            env_vars,
+            service_backend_dict['version'],
+            self.service_plan.ram * 1024 * 1024,
+            self.service_plan.cpu_weight,
+            service_backend_dict['plugin'].ports,
+        )
+        self.uri = service_backend_dict['plugin']().return_uri(self, ports, env_vars)
+        self.container_id = container_id
+        self.save()
 
     def __unicode__(self):
         return u"%s" % self.uuid
+
+    @classmethod
+    def provision(cls, service_plan):
+        obj = cls.objects.create(
+            host=get_available_host(service_plan.service_backend),
+            service_plan=service_plan,
+        )
+        obj.deploy()
+        return obj
 
 
 def create_service_instance_configuration(sender, instance, created, *args, **kwargs):

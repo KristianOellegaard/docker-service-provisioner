@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'south',
     'docker_service_provisioner',
     'docker_service_redis',
+    'rest_framework'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -85,6 +86,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+DEFAULT_PERMISSION_CLASSES = (
+    'rest_framework.permissions.IsAdminUser',
+)
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    'rest_framework.authentication.BasicAuthentication'
+    #'rest_framework.authentication.SessionAuthentication',
+)
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'docker_service_provisioner.views.exception_handler'
+}
 
 DOCKER_IMAGE_SERVER = os.environ.get("DOCKER_IMAGE_SERVER")
 DOCKER_PROVISION_URL = os.environ.get("DOCKER_PROVISION_URL")

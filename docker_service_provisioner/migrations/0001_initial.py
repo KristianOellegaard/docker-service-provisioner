@@ -44,6 +44,7 @@ class Migration(SchemaMigration):
         db.create_table(u'docker_service_provisioner_serviceinstance', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('uuid', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=32, blank=True)),
+            ('host', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['docker_service_provisioner.Host'])),
             ('service_plan', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['docker_service_provisioner.ServicePlan'])),
         ))
         db.send_create_signal(u'docker_service_provisioner', ['ServiceInstance'])
@@ -93,6 +94,7 @@ class Migration(SchemaMigration):
         },
         u'docker_service_provisioner.serviceinstance': {
             'Meta': {'object_name': 'ServiceInstance'},
+            'host': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['docker_service_provisioner.Host']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'service_plan': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['docker_service_provisioner.ServicePlan']"}),
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '32', 'blank': 'True'})

@@ -1,0 +1,17 @@
+{
+  "id": "redis",
+  "api": {
+    "config_vars": [ "REDIS_URL" ],
+    "regions": [ "us" ],
+    "password": "de6803ac80259a6f04121bb94af6b986",
+    "sso_salt": "ae840e67d6336ae06aebe23b260659ba",
+    "production": {
+      "base_url": "https://yourapp.com/heroku/resources",
+      "sso_url": "https://yourapp.com/sso/login"
+    },
+    "test": {
+      "base_url": "http://localhost:8000/redis/resources/",
+      "sso_url": "http://localhost:8000/sso/login"
+    }
+  }
+}

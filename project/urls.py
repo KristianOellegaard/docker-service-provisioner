@@ -4,8 +4,6 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'project.views.home', name='home'),
     url(r'^', include('docker_service_provisioner.urls')),
 
     url(r'^admin/', include(admin.site.urls)),

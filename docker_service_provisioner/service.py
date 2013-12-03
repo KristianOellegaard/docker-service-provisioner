@@ -11,6 +11,10 @@ class DockerService(object):
     configuration = {
 
     }
+    ports = []
+
+    def return_uri(self, service_instance, ports, env_vars):
+        raise NotImplementedError()
 
 
 class RandomGenerator(object):

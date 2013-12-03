@@ -17,11 +17,18 @@ admin.site.register(Service, ServiceAdmin)
 class ServiceInstanceConfigurationInline(admin.TabularInline):
     model = ServiceInstanceConfiguration
     extra = 0
+    readonly_fields = ('name', 'value')
 
+
+def deploy_instances(modeladmin, model, queryset):
+    for instance in queryset:
+        instance.deploy()
 
 class ServiceInstanceAdmin(admin.ModelAdmin):
     inlines = [ServiceInstanceConfigurationInline, ]
-    list_display = ('uuid', 'service_plan', 'docker_run_command')
+    list_display = ('uuid', 'service_plan',)
+    actions = [deploy_instances, ]
+    readonly_fields = ('uri', 'uuid', 'container_id')
 
 admin.site.register(ServiceInstance, ServiceInstanceAdmin)
 

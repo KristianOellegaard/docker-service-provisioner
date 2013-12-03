@@ -27,4 +27,9 @@ CMD ["/run.sh"]
         'PASSWORD': RandomText
     }
 
+    ports = [6379]
+
+    def return_uri(self, service_instance, ports, env_vars):
+        return "redis://:%s@%s:%s" % (env_vars['PASSWORD'], service_instance.host.hostname, ports[6379])
+
 pool.register("redis", RedisService, version=1)

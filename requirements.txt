@@ -1,4 +1,5 @@
 Django==1.6
 django-uuidfield==0.4.0
 South==0.8.4
-docker-py==0.2.2
+-e git+https://github.com/dotcloud/docker-py.git#egg=docker-py
+djangorestframework==2.3.9
