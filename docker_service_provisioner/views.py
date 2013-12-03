@@ -70,18 +70,28 @@ class ServiceInstanceProvisionAPIView(CustomAPIView):
           "message": "your message here"
         }
         """
-        body = json.loads(request.body)
+        try:
+            body = json.loads(request.body)
+        except ValueError:
+            return Response({
+                'message': 'No JSON received.'
+            }, status=422)
         try:
             plan = ServicePlan.objects.get(name=body['plan'], service__name__iexact=service)
         except ServicePlan.DoesNotExist:
             raise Http404("Service plan %s does not exist for service %s" % (body['plan'], service))
-        service_instance = ServiceInstance.provision(plan)
-        return Response({
-            'id': str(service_instance.uuid),
-            'config': {("%s_URL" % service_instance.service_plan.service.name).upper(): service_instance.uri},
-            'message': "Addon %s (%s) successfully provisioned" % (service_instance.service_plan.service.name,
-                                                                   service_instance.service_plan.name)
-        })
+        try:
+            service_instance = ServiceInstance.provision(plan)
+            return Response({
+                'id': str(service_instance.uuid),
+                'config': {("%s_URL" % service_instance.service_plan.service.name).upper(): service_instance.uri},
+                'message': "Addon %s (%s) successfully provisioned" % (service_instance.service_plan.service.name,
+                                                                       service_instance.service_plan.name)
+            })
+        except Exception as e:
+            return Response({
+                'message': 'An error has occured.'
+            }, status=422)
 
 
 class ServiceInstanceUpdateDeleteAPIView(CustomAPIView):
@@ -108,7 +118,12 @@ class ServiceInstanceUpdateDeleteAPIView(CustomAPIView):
         Request Body: {"heroku_id": "app123@heroku.com", "plan": "premium"}
         Response Body: {"config": { ... }, "message": "your message here"}
         """
-        body = json.loads(request.body)
+        try:
+            body = json.loads(request.body)
+        except ValueError:
+            return Response({
+                'message': 'No JSON received.'
+            }, status=422)
         try:
             plan = ServicePlan.objects.get(name=body['plan'], service__name__iexact=service)
             service_instance = ServiceInstance.objects.get(uuid=uuid, service_plan__service__name__iexact=service)
