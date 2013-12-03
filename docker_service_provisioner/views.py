@@ -49,7 +49,6 @@ def exception_handler(exc):
 
 class CustomAPIView(APIView):
     def permission_denied(self, request):
-        print "rofl"
         raise exceptions.NotAuthenticated()
 
 
@@ -78,18 +77,46 @@ class ServiceInstanceProvisionAPIView(CustomAPIView):
             raise Http404("Service plan %s does not exist for service %s" % (body['plan'], service))
         service_instance = ServiceInstance.provision(plan)
         return Response({
-            'id': service_instance.pk,
+            'id': str(service_instance.uuid),
             'config': {("%s_URL" % service_instance.service_plan.service.name).upper(): service_instance.uri},
             'message': "Addon %s (%s) successfully provisioned" % (service_instance.service_plan.service.name,
                                                                    service_instance.service_plan.name)
         })
 
 
-class ServiceInstanceDeleteAPIView(CustomAPIView):
-    def delete(self, request, service, pk, format=None):
+class ServiceInstanceUpdateDeleteAPIView(CustomAPIView):
+    def delete(self, request, service, uuid, format=None):
         """
         Request: DELETE https://username:password@api.heroku.com/heroku/resources/:id
         Request Body: none
         Response Status: 200
         """
-        return Response([])
+        try:
+            service_instance = ServiceInstance.objects.get(uuid=uuid, service_plan__service__name__iexact=service)
+            service_instance.delete()
+            return Response({
+                'message': 'Success'
+            })
+        except Exception as e:
+            return Response({
+                'message': 'An error has occured.'
+            }, status=422)
+
+    def put(self, request, service, uuid, format=None):
+        """
+        Request: PUT https://username:password@api.heroku.com/heroku/resources/:id
+        Request Body: {"heroku_id": "app123@heroku.com", "plan": "premium"}
+        Response Body: {"config": { ... }, "message": "your message here"}
+        """
+        body = json.loads(request.body)
+        try:
+            plan = ServicePlan.objects.get(name=body['plan'], service__name__iexact=service)
+            service_instance = ServiceInstance.objects.get(uuid=uuid, service_plan__service__name__iexact=service)
+            service_instance.change_plan_to(plan)
+            return Response({
+                'message': 'Success'
+            })
+        except Exception as e:
+            return Response({
+                'message': 'An error has occured.'
+            }, status=422)

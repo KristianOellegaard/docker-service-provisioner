@@ -1,8 +1,10 @@
+import traceback
 from django.db import models
 from django.db.models.signals import post_save
 from docker_service_provisioner.service_pool import pool
-from docker_service_provisioner.tasks import deploy_instance
+from docker_service_provisioner.tasks import deploy_instance, delete_instance
 from uuidfield import UUIDField
+from django.db import transaction
 
 
 def get_available_host(service_backend):
@@ -74,6 +76,21 @@ class ServiceInstance(models.Model):
         self.uri = service_backend_dict['plugin']().return_uri(self, ports, env_vars)
         self.container_id = container_id
         self.save()
+
+    def change_plan_to(self, new_plan):
+        self.service_plan = new_plan
+        # TODO: Make the backends able to implement this in a custom way
+        self.save()
+
+    def delete(self, using=None):
+        with transaction.atomic():
+            service_backend_dict = pool.get_dict(self.service_plan.service_backend)
+            delete_instance(
+                self.host.docker_api_endpoint,
+                service_backend_dict['service'],
+                self.container_id
+            )
+            return super(ServiceInstance, self).delete(using=using)
 
     def __unicode__(self):
         return u"%s" % self.uuid

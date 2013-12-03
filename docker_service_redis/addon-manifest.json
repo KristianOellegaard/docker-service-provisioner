@@ -10,7 +10,7 @@
       "sso_url": "https://yourapp.com/sso/login"
     },
     "test": {
-      "base_url": "http://localhost:8000/redis/resources/",
+      "base_url": "http://localhost:8000/redis/resources",
       "sso_url": "http://localhost:8000/sso/login"
     }
   }

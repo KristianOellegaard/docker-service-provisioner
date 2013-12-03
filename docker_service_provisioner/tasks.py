@@ -19,3 +19,9 @@ def deploy_instance(docker_api_endpoint, service_name, env_vars, revision, memor
     # Use inspect_container, as c.ports() doesn't seem to work for some reason
     container = c.inspect_container(container_id)
     return container['ID'], {p: container['NetworkSettings']['Ports']["%s/tcp" % p][0]['HostPort'] for p in ports}
+
+
+def delete_instance(docker_api_endpoint, service_name, container_id):
+    c = DockerClient(docker_api_endpoint)
+    c.stop(container_id)
+    c.remove_container(container_id)
