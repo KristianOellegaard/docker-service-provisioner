@@ -21,3 +21,11 @@ python manage.py build_docker_images
 **You have to run docker on a TCP socket, remember it must be on a private network or everyone can play around with it!**
 E.g. 
 ```docker -d -H tcp://0.0.0.0:12345```
+
+Testing the services with Kensa:
+--------------------------------
+
+```bash
+gem install kensa
+kensa test provision # Needs to be inside the service dir, like docker_service_redis
+```
